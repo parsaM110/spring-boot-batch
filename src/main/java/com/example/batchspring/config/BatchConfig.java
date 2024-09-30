@@ -32,7 +32,7 @@ public class BatchConfig {
     @Bean
     public FlatFileItemReader<Student> itemReader(){
         FlatFileItemReader<Student> itemReader = new FlatFileItemReader<>();
-        itemReader.setResource(new FileSystemResource("/src/main/resources/students.csv"));
+        itemReader.setResource(new FileSystemResource("src/main/resources/students.csv"));
         itemReader.setName("csvReader");
         itemReader.setLinesToSkip(1); //do not read the header
         itemReader.setLineMapper(lineMapper());
