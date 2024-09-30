@@ -1,7 +1,9 @@
 package com.example.batchspring.config;
 
 import com.example.batchspring.student.Student;
+import com.example.batchspring.student.StudentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.batch.item.data.RepositoryItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.LineMapper;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
@@ -16,6 +18,9 @@ import org.springframework.core.io.FileSystemResource;
 @RequiredArgsConstructor
 public class BatchConfig {
 
+    private final StudentRepository repository;
+
+
     @Bean
     public FlatFileItemReader<Student> itemReader(){
         FlatFileItemReader<Student> itemReader = new FlatFileItemReader<>();
@@ -24,6 +29,20 @@ public class BatchConfig {
         itemReader.setLinesToSkip(1); //do not read the header
         itemReader.setLineMapper(lineMapper());
         return itemReader;
+    }
+
+
+    @Bean
+    public StudentProcessor processor(){
+        return new StudentProcessor();
+    }
+
+    @Bean
+    public RepositoryItemWriter<Student> write() {
+        RepositoryItemWriter<Student> writer = new RepositoryItemWriter<>();
+        writer.setRepository(repository);
+        writer.setMethodName("save");
+        return writer;
     }
 
     private LineMapper<Student> lineMapper(){
