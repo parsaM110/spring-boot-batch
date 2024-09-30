@@ -58,7 +58,7 @@ public class BatchConfig {
     @Bean
     public Step importStep(){
         return new StepBuilder("csvImport",jobRepository)
-                .<Student,Student>chunk(10,platformTransactionManager)
+                .<Student,Student>chunk(1000,platformTransactionManager)
                 .reader(itemReader())
                 .processor(processor())
                 .writer(writer())
