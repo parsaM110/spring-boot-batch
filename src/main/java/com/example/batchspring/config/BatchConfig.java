@@ -3,6 +3,11 @@ package com.example.batchspring.config;
 import com.example.batchspring.student.Student;
 import com.example.batchspring.student.StudentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.Step;
+import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.data.RepositoryItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.LineMapper;
@@ -13,11 +18,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @RequiredArgsConstructor
 public class BatchConfig {
 
+    private final JobRepository jobRepository;
+    private final PlatformTransactionManager platformTransactionManager;
     private final StudentRepository repository;
 
 
@@ -38,11 +46,28 @@ public class BatchConfig {
     }
 
     @Bean
-    public RepositoryItemWriter<Student> write() {
+    public RepositoryItemWriter<Student> writer() {
         RepositoryItemWriter<Student> writer = new RepositoryItemWriter<>();
         writer.setRepository(repository);
         writer.setMethodName("save");
         return writer;
+    }
+
+    @Bean
+    public Step importStep(){
+        return new StepBuilder("csvImport",jobRepository)
+                .<Student,Student>chunk(10,platformTransactionManager)
+                .reader(itemReader())
+                .processor(processor())
+                .writer(writer())
+                .build();
+    }
+
+    @Bean
+    public Job runJob(){
+        return new JobBuilder("importStudents",jobRepository)
+                .start(importStep())
+                .build();
     }
 
     private LineMapper<Student> lineMapper(){
